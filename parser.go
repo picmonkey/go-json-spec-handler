@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"mime"
 	"net/http"
 )
 
@@ -156,7 +157,8 @@ func closeReader(reader io.ReadCloser) {
 func validateHeaders(headers http.Header) *Error {
 
 	reqContentType := headers.Get("Content-Type")
-	if reqContentType != ContentType {
+	reqMediaType, _, err := mime.ParseMediaType(reqContentType)
+	if err != nil || reqMediaType != ContentType {
 		return SpecificationError(fmt.Sprintf(
 			"Expected Content-Type header to be %s, got: %s",
 			ContentType,

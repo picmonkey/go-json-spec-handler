@@ -13,13 +13,33 @@ func TestParsing(t *testing.T) {
 	Convey("Parse Tests", t, func() {
 
 		Convey("->validateHeaders()", func() {
-			req, reqErr := http.NewRequest("GET", "", nil)
-			So(reqErr, ShouldBeNil)
-			req.Header.Set("Content-Type", "jpeg")
+			Convey("should reject invalid Content-Type", func() {
+				req, reqErr := http.NewRequest("GET", "", nil)
+				So(reqErr, ShouldBeNil)
+				req.Header.Set("Content-Type", "jpeg")
 
-			err := validateHeaders(req.Header)
-			So(err, ShouldNotBeNil)
-			So(err.Status, ShouldEqual, http.StatusNotAcceptable)
+				err := validateHeaders(req.Header)
+				So(err, ShouldNotBeNil)
+				So(err.Status, ShouldEqual, http.StatusNotAcceptable)
+			})
+
+			Convey("should work with valid Content-Type", func() {
+				req, reqErr := http.NewRequest("GET", "", nil)
+				So(reqErr, ShouldBeNil)
+				req.Header.Set("Content-Type", "application/vnd.api+json")
+
+				err := validateHeaders(req.Header)
+				So(err, ShouldBeNil)
+			})
+
+			Convey("should tolerate correct Content-Type with parameters to work around Firefox < v.43 bug (BREAKS SPEC: http://jsonapi.org/format/#content-negotiation-clients)", func() {
+				req, reqErr := http.NewRequest("GET", "", nil)
+				So(reqErr, ShouldBeNil)
+				req.Header.Set("Content-Type", "application/vnd.api+json; charset=UTF-8")
+
+				err := validateHeaders(req.Header)
+				So(err, ShouldBeNil)
+			})
 		})
 
 		Convey("->ParseObject()", func() {
